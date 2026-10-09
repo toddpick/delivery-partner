@@ -1,0 +1,19 @@
+{
+  "errors": [
+    {
+      "field": "client_reference",
+      "code": "too_long",
+      "message": "client_reference must be at most 12 characters"
+    },
+    {
+      "field": "recipient.phone",
+      "code": "required",
+      "message": "recipient phone is required"
+    },
+    {
+      "field": "delivery_window.slot",
+      "code": "slot_unavailable_for_zone",
+      "message": "EVE is not available for this postal code"
+    }
+  ]
+}

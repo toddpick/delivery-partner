@@ -1,0 +1,266 @@
+openapi: 3.1.0
+info:
+  title: Delivery partner parcel API
+  version: 1.4.0
+  description: |
+    Book parcels and read their status. Status changes are also pushed by webhook
+    (see docs/webhooks.md).
+servers:
+  - url: https://api.delivery-partner.example/v1
+security:
+  - ApiKeyAuth: []
+paths:
+  /parcels:
+    post:
+      operationId: createParcel
+      summary: Create one parcel
+      description: One parcel is one physical box. Rate limit is 10 requests per second per client.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateParcelRequest'
+      responses:
+        '201':
+          description: Parcel created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parcel'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /parcels/{parcel_id}:
+    get:
+      operationId: getParcel
+      summary: Get a parcel
+      parameters:
+        - $ref: '#/components/parameters/ParcelId'
+      responses:
+        '200':
+          description: The parcel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parcel'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown parcel
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /parcels/{parcel_id}/cancel:
+    post:
+      operationId: cancelParcel
+      summary: Cancel a parcel
+      description: Allowed only before the parcel reaches COLLECTED.
+      parameters:
+        - $ref: '#/components/parameters/ParcelId'
+      responses:
+        '200':
+          description: Parcel cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parcel'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown parcel
+        '409':
+          description: Parcel has already been collected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+  parameters:
+    ParcelId:
+      name: parcel_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^DP-[A-Z0-9]{8}$'
+  responses:
+    Unauthorized:
+      description: Missing or invalid API key
+    RateLimited:
+      description: More than 10 requests per second
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+  schemas:
+    CreateParcelRequest:
+      type: object
+      required: [recipient, address, weight_kg, dimensions_cm, delivery_window]
+      properties:
+        client_reference:
+          type: string
+          maxLength: 12
+        recipient:
+          type: object
+          required: [name, phone]
+          properties:
+            name:
+              type: string
+            phone:
+              type: string
+              description: E.164
+        address:
+          type: object
+          required: [street1, city, region, postal_code, country_code]
+          properties:
+            street1: { type: string }
+            street2: { type: string }
+            city: { type: string }
+            region: { type: string }
+            postal_code: { type: string }
+            country_code: { type: string, minLength: 2, maxLength: 2 }
+        weight_kg:
+          type: number
+          multipleOf: 0.01
+          exclusiveMinimum: 0
+          maximum: 30.00
+        dimensions_cm:
+          type: object
+          required: [length, width, height]
+          properties:
+            length: { type: integer, minimum: 1 }
+            width: { type: integer, minimum: 1 }
+            height: { type: integer, minimum: 1 }
+        special_handling:
+          type: boolean
+          default: false
+        dangerous_goods:
+          type: boolean
+          description: Hazardous goods are not accepted. true is rejected.
+          default: false
+        delivery_window:
+          $ref: '#/components/schemas/DeliveryWindow'
+        signature_service:
+          type: boolean
+          default: false
+          description: Paid add-on. Default proof of delivery is a photo.
+    DeliveryWindow:
+      type: object
+      required: [date, slot]
+      properties:
+        date:
+          type: string
+          format: date
+          description: Depot local date
+        slot:
+          type: string
+          enum: [AM, PM, EVE]
+          description: AM 08-12, PM 12-17, EVE 17-21 (evening zones only), depot local time
+    Parcel:
+      type: object
+      required: [parcel_id, status, created_at]
+      properties:
+        parcel_id:
+          type: string
+          pattern: '^DP-[A-Z0-9]{8}$'
+        client_reference:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/Status'
+        delivery_window:
+          $ref: '#/components/schemas/DeliveryWindow'
+        created_at:
+          type: string
+          format: date-time
+          description: UTC
+        proof_of_delivery:
+          $ref: '#/components/schemas/ProofOfDelivery'
+    Status:
+      type: string
+      enum:
+        - CREATED
+        - LABELLED
+        - COLLECTED
+        - AT_DEPOT
+        - HELD_AT_DEPOT
+        - OUT_FOR_DELIVERY
+        - DELIVERED
+        - FAILED_ATTEMPT
+        - RETURNED_TO_SENDER
+    ProofOfDelivery:
+      type: object
+      required: [type, captured_at]
+      properties:
+        type:
+          type: string
+          enum: [PHOTO, SIGNATURE]
+        photo_url:
+          type: string
+        signed_by:
+          type: string
+        captured_at:
+          type: string
+          format: date-time
+          description: UTC
+    StatusEvent:
+      type: object
+      required: [event_id, event_type, parcel_id, status, occurred_at]
+      properties:
+        event_id:
+          type: string
+        event_type:
+          type: string
+          const: parcel.status_changed
+        parcel_id:
+          type: string
+        client_reference:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/Status'
+        occurred_at:
+          type: string
+          format: date-time
+          description: UTC
+        proof_of_delivery:
+          $ref: '#/components/schemas/ProofOfDelivery'
+    Error:
+      type: object
+      required: [errors]
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, code, message]
+            properties:
+              field: { type: string }
+              code: { type: string }
+              message: { type: string }
+webhooks:
+  parcelStatusChanged:
+    post:
+      summary: Parcel status changed
+      description: See docs/webhooks.md for delivery guarantees and signature verification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusEvent'
+      responses:
+        '204':
+          description: Event accepted

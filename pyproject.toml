@@ -1,0 +1,20 @@
+[project]
+name = "delivery-partner"
+version = "0.4.0"
+description = "Parcel booking API logic and status webhooks for the Delivery partner"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["delivery"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

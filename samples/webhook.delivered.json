@@ -1,0 +1,13 @@
+{
+  "event_id": "evt_5c1f0a9d42",
+  "event_type": "parcel.status_changed",
+  "parcel_id": "DP-7Q4K2M9X",
+  "client_reference": "A-10482",
+  "status": "DELIVERED",
+  "occurred_at": "2026-09-14T18:32:07",
+  "proof_of_delivery": {
+    "type": "PHOTO",
+    "captured_at": "2026-09-14T18:31:55",
+    "photo_url": "https://pod.delivery-partner.example/p/7Q4K2M9X/1.jpg"
+  }
+}

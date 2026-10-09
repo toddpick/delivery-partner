@@ -1,0 +1,21 @@
+{
+  "client_reference": "A-10482",
+  "recipient": {
+    "name": "Alex Rivera",
+    "phone": "+15550100123"
+  },
+  "address": {
+    "street1": "218 Maple Court",
+    "street2": "Apt 4B",
+    "city": "Riverton",
+    "region": "OH",
+    "postal_code": "44114",
+    "country_code": "US"
+  },
+  "weight_kg": 2.35,
+  "dimensions_cm": { "length": 40, "width": 30, "height": 15 },
+  "special_handling": true,
+  "dangerous_goods": false,
+  "delivery_window": { "date": "2026-10-20", "slot": "EVE" },
+  "signature_service": false
+}

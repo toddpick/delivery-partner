@@ -1,0 +1,1 @@
+"""Delivery partner parcel logic."""

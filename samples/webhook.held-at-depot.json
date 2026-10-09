@@ -1,0 +1,8 @@
+{
+  "event_id": "evt_a83e6d10b7",
+  "event_type": "parcel.status_changed",
+  "parcel_id": "DP-3HN8T5RW",
+  "client_reference": "A-10475",
+  "status": "HELD_AT_DEPOT",
+  "occurred_at": "2026-09-14T11:05:41"
+}
