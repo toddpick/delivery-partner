@@ -24,3 +24,10 @@ You only know this repository. Never invent facts about the other side. Ask thei
 - Write it into `specs/INT-310-orders-client-onboarding/` (`requirements.md`, `design.md`, `tasks.md`).
 - Fill the decision log in `DECISIONS.md` and set gate statuses as decided in the room.
 - Commit locally with a clear message. Do not push.
+
+## Usage reporting
+
+The team tracks what AI-assisted work costs. In your final message to the session (just before you declare your side done), add one line with your session's token usage. Run the matching command and paste the line it prints; never estimate:
+
+- Claude Code: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/session-usage.ps1`
+- Codex: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/session-usage.ps1 -Tool codex`
